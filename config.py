@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from libqtile.config import Key, Screen, Group, Drag, Click
 from libqtile.command import lazy
@@ -87,7 +88,8 @@ keys = [
     Key('M-S-<Return>', lazy.layout.toggle_split()),
 
     # Window management and navigation
-    Key('M-c',     lazy.window.kill()),
+    Key('M-<grave>', lazy.screen.toggle_group()),
+    Key('M-c',       lazy.window.kill()),
     Key('M-<Left>',  lazy.screen.prev_group(skip_managed=True)),
     Key('M-<Right>', lazy.screen.next_group(skip_managed=True)),
 
@@ -207,3 +209,10 @@ def set_floating(window):
         window.floating = True
         window.x = int(screen.width / 2 - window.width / 2)
         window.y = int(screen.height / 2 - window.height / 2)
+
+
+@hook.subscribe.startup_once
+def autostart():
+    subprocess.run(['xsetroot', '-solid', '#2980B9'], shell=True)
+    subprocess.run(['systemctl', '--user', 'restart', 'emacs', 'qxkb', 'redshift-gtk', 'ssh-agent'])
+    subprocess.run(['xmodmap', '~/.Xmodmap'])
