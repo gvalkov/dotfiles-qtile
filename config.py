@@ -7,6 +7,7 @@ from libqtile import layout, bar, widget, hook
 
 from libqtile.config import EzKey as Key
 from libqtile.config import EzClick as Click, EzDrag as Drag
+from libqtile.log_utils import logger
 
 from qtile_utils import *
 
@@ -102,6 +103,7 @@ keys = [
     # Programs
     Key('M-a', lazy.spawn(TERMINAL)),
     Key('M-f', lazy.spawn('firefox')),
+    Key('M-t', lazy.spawn('nautilus --no-desktop')),
     Key('M-e', lazy.spawn('emacsclient -c')),
 
     # Layouts
@@ -205,14 +207,23 @@ is_floating = _is_floating()
 @hook.subscribe.client_new
 def set_floating(window):
     if is_floating(window.window):
-        screen = window.qtile.find_closest_screen(window.x, window.y)
+        logger.error('Floating window')
         window.floating = True
-        window.x = int(screen.width / 2 - window.width / 2)
-        window.y = int(screen.height / 2 - window.height / 2)
+        # screen = window.qtile.find_closest_screen(window.x, window.y)
+
+        screen = window.qtile.currentScreen
+        group = window.qtile.currentGroup
+
+        window.togroup(group.name)
+        width, height = window.getsize()
+
+        dx = max(0, screen.width // 2 - width // 2)
+        dy = max(0, screen.height // 2 - height // 2)
+        window.tweak_float(x=screen.x, y=screen.y, dx=dx, dy=dy)
 
 
 @hook.subscribe.startup_once
-def autostart():
-    subprocess.run(['xsetroot', '-solid', '#2980B9'], shell=True)
-    subprocess.run(['systemctl', '--user', 'restart', 'emacs', 'qxkb', 'redshift-gtk', 'ssh-agent'])
-    subprocess.run(['xmodmap', '~/.Xmodmap'])
+def startup_once():
+    subprocess.Popen(['systemctl', '--user', 'restart', 'emacs', 'qxkb', 'redshift-gtk', 'ssh-agent'])
+    subprocess.Popen(['xsetroot', '-solid', '#2980B9'])
+    subprocess.Popen(['xmodmap', '~/.Xmodmap'])
